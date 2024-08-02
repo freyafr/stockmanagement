@@ -1,0 +1,5 @@
+backend/src/StockManagement/.vs/*
+backend/src/StockManagement/StockManagement/obj/*
+backend/src/StockManagement/StockManagement/bin/*
+backend/src/StockManagement/StockManagement.*/obj/*
+backend/src/StockManagement/StockManagement.*/bin/*
