@@ -30,14 +30,18 @@
         <input type="number" v-model="newStock.amount" v-on:change="validatePurchase" required />  
       </div>      
       <div class="form-group" v-if="newStock.error==''">
-          <label for="totalPrice">Total Price: {{newStock.totalPrice}}</label>        
+          <label for="totalPrice">Total Price: {{newStock.price*newStock.amount}}</label>        
         </div>
         <div class="form-group error" v-if="newStock.error!=''">
           {{newStock.error}}      
         </div>
-      <button :disabled="newStock.error!=''" type="submit">Add Stock</button>
+      <button :disabled="newStock.error!=''||newStock.amount<=0" type="submit">Add Stock</button>
     </form>
   </div>
+  <!-- Toast Notification -->
+  <div v-if="showToast" class="toast">
+      Stock purchased successfully!
+    </div>
   </div>
   </template>
   
@@ -53,9 +57,9 @@
           stockId: '',
           amount: 0,
           price: 0,
-          totalPrice: 0,
           error:''
-      }
+      },
+      showToast: false
       };
     },
     created() {      
@@ -65,7 +69,7 @@
     methods: {
       async fetchStocks() {
         try {
-          const response = await fetch('https://localhost:7252/api/v1/Purchases/89e8d857-3e13-4d47-b53b-04b0eda248ea');
+          const response = await fetch(`${process.env.VUE_APP_API_BASE_URL}/Purchases/89e8d857-3e13-4d47-b53b-04b0eda248ea`);
           this.stocks = await response.json();
         } catch (error) {
           console.error('Error fetching stocks:', error);
@@ -73,7 +77,7 @@
       }, 
       async fetchAvailableStocks() {
         try {
-          const response = await fetch('https://localhost:7252/api/v1/Stocks');
+          const response = await fetch(`${process.env.VUE_APP_API_BASE_URL}/Stocks`);
           this.availableStocks = await response.json();
         } catch (error) {
           console.error('Error fetching available stocks:', error);
@@ -81,7 +85,7 @@
       },     
       async addStock() {
         try {
-          const response = await fetch('https://localhost:7252/api/v1/Purchases', {
+          const response = await fetch(`${process.env.VUE_APP_API_BASE_URL}/Purchases`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
@@ -93,6 +97,7 @@
             this.newStock = { stockId: '', amount: 0, price: 0, error:'',clientId:'89e8d857-3e13-4d47-b53b-04b0eda248ea' };
             this.fetchStocks(); // Refresh the stock list
             this.$emit('stock-added'); // Emit the event
+            this.showToastNotification();
           } else {
             var error=await response.json();
             console.error('Error adding stock:', error);
@@ -116,13 +121,12 @@
         this.newStock.price = selectedStock.price;
         
         if (!this.newStock.stockId || this.newStock.amount <= 0) {
-          this.newStock.totalPrice = 0;
           this.newStock.error = '';
           return;
         }        
 
         try {
-          const response = await fetch('https://localhost:7252/api/v1/Purchases/validate', {
+          const response = await fetch(`${process.env.VUE_APP_API_BASE_URL}/purchases/validate`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -131,27 +135,29 @@
           });
 
           if (response.ok) {
-            const data = await response.json();
-            this.newStock.totalPrice = data.totalPrice;
             this.newStock.error = '';
           } else {
             var error=await response.json();
             console.error('Error validating purchase:', error);
-            this.newStock.totalPrice = 0;
             this.newStock.error =  error;
           }
         } catch (error) {
           console.error('Error validating purchase:', error);
-          this.newStock.totalPrice = 0;
           this.newStock.error =  error;
         }
+      },
+      showToastNotification() {
+        this.showToast = true;
+        setTimeout(() => {
+          this.showToast = false;
+        }, 5000); // Toast disappears after 5 seconds
       },
     },
   };
   </script>
   
   <style scoped>
-    /* Grid layout for the stock items */
+   
 /* Grid layout for the stock items */
 .stock-grid {
   display: grid;
@@ -254,6 +260,26 @@ button:disabled {
 button:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Styling for the toast notification */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #28a745;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  z-index: 1000;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Fade out effect */
+.toast-fade-out {
+  opacity: 0;
 }
   </style>
   

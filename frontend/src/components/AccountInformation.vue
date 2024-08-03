@@ -22,7 +22,7 @@ export default {
   methods: {
     async fetchUserAccount() {
       try {
-        const response = await fetch('https://localhost:7252/api/v1/Accounts/89e8d857-3e13-4d47-b53b-04b0eda248ea');
+        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL}/Accounts/89e8d857-3e13-4d47-b53b-04b0eda248ea`);
         this.user = await response.json();
       } catch (error) {
         console.error('Error fetching user account:', error);
