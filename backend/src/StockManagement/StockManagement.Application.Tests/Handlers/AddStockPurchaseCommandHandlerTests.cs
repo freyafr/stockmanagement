@@ -9,7 +9,7 @@ using StockManagement.Core.Dtos;
 using StockManagement.Core.Interfaces;
 using StockManagement.Core.Models;
 
-namespace StockManagement.Application.Tests
+namespace StockManagement.Application.Tests.Handlers
 {
     public class AddStockPurchaseCommandHandlerTests
     {
@@ -17,7 +17,7 @@ namespace StockManagement.Application.Tests
         private readonly Mock<IMapper> _mapperMock = new();
         private readonly Mock<IValidator<AddStockPurchaseCommand>> _validatorMock = new();
 
-        private readonly PurchaseCreateDto _testPurchase = new PurchaseCreateDto
+        private readonly PurchaseCreateDto _testPurchase = new()
         {
             Amount = 2,
             ClientId = Guid.NewGuid(),
@@ -46,6 +46,12 @@ namespace StockManagement.Application.Tests
                     Name = "test",
                     Price = 12
                 });
+
+            var purchaseRepositoryMock = new Mock<IPurchaseRepository>();
+            _unitOfWorkMock.Setup(x => x.PurchaseRepository).Returns(purchaseRepositoryMock.Object);
+
+            _mapperMock.Setup(x => x.Map<Purchase>(_testPurchase))
+                .Returns(new Purchase());
         }
 
         [Fact]
@@ -69,6 +75,30 @@ namespace StockManagement.Application.Tests
             result.TotalPrice.Should().Be(24);
             result.ClientId.Should().Be(_testPurchase.ClientId);
             _unitOfWorkMock.Verify(x => x.PurchaseRepository, Times.Never);
+        }
+
+        [Fact]
+        public async Task Handle()
+        {
+            _validatorMock.Setup(x => x.ValidateAsync(It.IsAny<AddStockPurchaseCommand>(), CancellationToken.None))
+                .ReturnsAsync(new ValidationResult
+                {
+                    Errors = new()
+                });
+
+            var handler =
+                new AddStockPurchaseCommandHandler(_unitOfWorkMock.Object, _mapperMock.Object, _validatorMock.Object);
+            var result = await handler.Handle(new AddStockPurchaseCommand
+            {
+                ValidateOnly = false,
+                Purchase = _testPurchase
+            }, CancellationToken.None);
+
+            result.Should().NotBeNull();
+            result.TotalPrice.Should().Be(24);
+            result.ClientId.Should().Be(_testPurchase.ClientId);
+            _unitOfWorkMock.Verify(x => x.PurchaseRepository, Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(CancellationToken.None), Times.Once);
         }
     }
 }

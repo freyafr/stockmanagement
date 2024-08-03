@@ -36,7 +36,7 @@ namespace StockManagement.WebApi.Controllers.v1
         }
 
         [HttpPut(Name = nameof(CreatePurchase))]
-        [ProducesResponseType(typeof(PurchaseCreateResponseDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(PurchaseCreateResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -44,7 +44,7 @@ namespace StockManagement.WebApi.Controllers.v1
         {
             logger.LogDebug("Trying to purchases a stock");
             var result = await mediator.Send(new AddStockPurchaseCommand { Purchase = purchase, ValidateOnly = false });
-            return Created(result.ClientId.ToString(), result);
+            return Ok(result);
         }
     }
 }
