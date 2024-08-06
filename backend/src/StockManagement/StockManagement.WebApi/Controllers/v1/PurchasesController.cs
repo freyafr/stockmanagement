@@ -35,7 +35,7 @@ namespace StockManagement.WebApi.Controllers.v1
             return Ok(result);
         }
 
-        [HttpPut(Name = nameof(CreatePurchase))]
+        [HttpPost(Name = nameof(CreatePurchase))]
         [ProducesResponseType(typeof(PurchaseCreateResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
